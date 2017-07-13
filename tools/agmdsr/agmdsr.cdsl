@@ -1,0 +1,12 @@
+import "AGM2.idsl";
+
+Component agmdsr
+{
+	Communications
+	{
+		implements AGMDSRService(ice), AGMDSRService(ros);
+		publishes AGMDSRTopic(ice), AGMDSRTopic(ros);
+	};
+	language python;
+};
+
