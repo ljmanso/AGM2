@@ -1,0 +1,80 @@
+module RoboCompAGM2
+{
+	struct StringPair
+	{
+		string first;
+		string second;
+	};
+	sequence<StringPair> StringDictionary;
+
+	struct Node
+	{
+		StringDictionary attributes;
+		int nodeIdentifier;
+		string nodeType;
+	};
+	sequence<Node> NodeSequence;
+
+	struct Edge
+	{
+		int a;
+		int b;
+		string edgeType;
+		StringDictionary attributes;
+	};
+	sequence <Edge> EdgeSequence;
+
+	struct World
+	{
+		NodeSequence nodes;
+		EdgeSequence edges;
+		int version;
+		string lastEditor;
+	};
+
+	struct Action
+	{
+		string name;
+		StringDictionary symbols;
+	};
+
+	sequence <Action> ActionSequence;
+
+	struct Plan
+	{
+		ActionSequence actions;
+		float cost;
+	};
+
+	struct StructuralChangeStruct
+	{
+		World model;
+		Plan changes;
+		string sender;
+		string log;
+	};
+
+	// API for the agents
+	interface AGMDSRService
+	{
+		void structuralChangeProposal(StructuralChangeStruct proposal, out int ret); // 0=Ok, 1=Locked, 2=OldModel, 3=InvalidChange
+		void broadcastModel(bool unusedI, out bool unusedR);
+
+		void symbolUpdate(Node n, out int ret);
+		void symbolsUpdate(NodeSequence ns, out int ret);
+		void edgeUpdate(Edge e, out int ret);
+		void edgesUpdate(EdgeSequence es, out int ret);
+		void getModel(bool unused, out World ret);
+		void getNode(int identifier, out Node ret);
+		void getEdge(Edge input, out Edge ret);
+	};
+
+	interface AGMDSRTopic
+	{
+		void structuralChange(World w);
+		void symbolsUpdated(NodeSequence modification);
+		void edgesUpdated(EdgeSequence modification);
+	};
+};
+
+
