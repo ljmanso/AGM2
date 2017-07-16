@@ -35,31 +35,30 @@ void AGMModelPrinter::printWorld(const AGMModel *w)
 }
 
 #if ROBOCOMP_SUPPORT == 1
-void AGMModelPrinter::printWorld(const RoboCompAGMWorldModel::World &w)
+void AGMModelPrinter::printWorld(const RoboCompAGM2::World &w)
 {
 	AGMModelPrinter::printWorld(stdout, w);
 }
 
-void AGMModelPrinter::printWorld(FILE *fd, const RoboCompAGMWorldModel::World &w)
+void AGMModelPrinter::printWorld(FILE *fd, const RoboCompAGM2::World &w)
 {
 	printf("ROBOCOMP_SUPPORT=%d World: %ld nodes, %ld links\n", ROBOCOMP_SUPPORT, w.nodes.size(), w.edges.size());
 	for (uint32_t i=0; i<w.nodes.size(); ++i)
 	{
 		fprintf(fd, "(%d): %s\n", w.nodes[i].nodeIdentifier, w.nodes[i].nodeType.c_str());
-		RoboCompAGMWorldModel::StringDictionary::const_iterator itr = w.nodes[i].attributes.begin();
-		for(; itr!=w.nodes[i].attributes.end(); ++itr)
+		RoboCompAGM2::StringDictionary::const_iterator itr = w.nodes[i].attributes.begin();
+		for(auto &v: w.nodes[i].attributes)
 		{
-			fprintf(fd, "\t<%s> --> <%s>\n", itr->first.c_str(), itr->second.c_str());
+			fprintf(fd, "\t<%s> --> <%s>\n", v.first.c_str(), v.second.c_str());
 		}
 	}
 
 	for (uint32_t i=0; i<w.edges.size(); ++i)
 	{
 		fprintf(fd, "%d -> %d  (%s)\n", w.edges[i].a, w.edges[i].b, w.edges[i].edgeType.c_str());
-		std::map<std::string, std::string>::const_iterator itr = w.edges[i].attributes.begin();
-		for(; itr!=w.edges[i].attributes.end(); ++itr)
+		for(auto &v: w.edges[i].attributes)
 		{
-			printf("\t<%s> --> <%s>\n", itr->first.c_str(), itr->second.c_str());
+			printf("\t<%s> --> <%s>\n", v.first.c_str(), v.second.c_str());
 		}
 	}
 }

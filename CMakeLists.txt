@@ -11,36 +11,6 @@ INCLUDE_DIRECTORIES ( . libagm )
 option (PYTHON_BINDINGS "Build python bindings" OFF)
 option (ROBOCOMP_SUPPORT "Build with support for RoboComp" OFF)
 
-#  Set sources  #
-#################
-SET (AGM_CODE
-  libagm/agm_misc_functions.cpp
-  libagm/agm_model.cpp
-  libagm/agm_modelEdge.cpp
-  libagm/agm_modelPrinter.cpp
-  libagm/agm_modelSymbols.cpp
-  libagm/agm_modelConverter.cpp
-  libagm/agm_plan.cpp
-  libagm/agm_inner.cpp
-  libagm/graphModelViewer.cpp
-)
-
-
-SET (HEADER_FILES
-  ${CMAKE_SOURCE_DIR}/libagm/agm.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_modelDrawer.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_modelEdge.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_modelException.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_model.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_modelPrinter.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_modelSymbols.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_misc_functions.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_modelConverter.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_config.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_plan.h
-  ${CMAKE_SOURCE_DIR}/libagm/agm_inner.h
-  ${CMAKE_SOURCE_DIR}/libagm/graphModelViewer.h
-)
 #  Show enabled optional features  #
 ####################################
 MESSAGE(STATUS "\n\nOptional features:")
@@ -60,6 +30,42 @@ else (ROBOCOMP_SUPPORT)
 endif (ROBOCOMP_SUPPORT)
 
 MESSAGE(STATUS "\n\n")
+
+
+#  Set sources  #
+#################
+SET (AGM_CODE
+  libagm/agm_misc_functions.cpp
+  libagm/agm_model.cpp
+  libagm/agm_modelEdge.cpp
+  libagm/agm_modelPrinter.cpp
+  libagm/agm_modelSymbols.cpp
+  libagm/agm_modelConverter.cpp
+  libagm/agm_plan.cpp
+  libagm/agm_inner.cpp
+  libagm/graphModelViewer.cpp
+  libagm/agm_modelDrawer.cpp 
+  /opt/robocomp/classes/rcdraw/rcdraw.cpp
+)
+
+
+SET (HEADER_FILES
+  ${CMAKE_SOURCE_DIR}/libagm/agm.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_modelDrawer.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_modelEdge.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_modelException.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_model.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_modelPrinter.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_modelSymbols.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_misc_functions.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_modelConverter.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_config.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_plan.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_inner.h
+  ${CMAKE_SOURCE_DIR}/libagm/graphModelViewer.h
+  ${CMAKE_SOURCE_DIR}/libagm/agm_modelDrawer.h
+  /opt/robocomp/classes/rcdraw/rcdraw.h
+)
 
 
 #  Handle optional features  #
@@ -98,6 +104,11 @@ if (ROBOCOMP_SUPPORT)
 	INCLUDE( $ENV{ROBOCOMP}/cmake/robocomp.cmake )
 	ROBOCOMP_INITIALIZE( $ENV{ROBOCOMP}/ )
 	SET(ICE_LIBS -lIce)
+# 	set(AGM_CODE
+# 	  ${AGM_CODE}
+# 	  libagm/agm_modelDrawer.cpp 
+# 	  /opt/robocomp/classes/rcdraw/rcdraw.cpp )
+# 	set(HEADER_FILES "${HEADER_FILES} libagm/agm_modelDrawer.h  /opt/robocomp/classes/rcdraw/rcdraw.h" )
 	message(status "$ENV{SLICE_PATH}")
 	ROBOCOMP_WRAP_ICE( AGM2 )
 	ADD_DEFINITIONS(-DROBOCOMP_SUPPORT=1)
@@ -239,10 +250,7 @@ INSTALL(PROGRAMS "${CMAKE_SOURCE_DIR}/AGGLPlanner/agglplannerserver.py" DESTINAT
 INSTALL(FILES "${CMAKE_SOURCE_DIR}/AGGLPlanner/agglplanner.thrift" DESTINATION ${INST_SHARE_PATH}/ )
 
 if (ROBOCOMP_SUPPORT)
-	INSTALL(FILES ${CMAKE_BINARY_DIR}/AGMCommonBehavior.h DESTINATION ${INST_INCL_PATH}/ )
-	INSTALL(FILES ${CMAKE_BINARY_DIR}/AGMWorldModel.h DESTINATION ${INST_INCL_PATH}/ )
-	INSTALL(FILES ${CMAKE_BINARY_DIR}/Planning.h DESTINATION ${INST_INCL_PATH}/ )
-	INSTALL(FILES ${CMAKE_BINARY_DIR}/AGMExecutive.h DESTINATION ${INST_INCL_PATH}/ )
+	INSTALL(FILES ${CMAKE_BINARY_DIR}/AGM2.h DESTINATION ${INST_INCL_PATH}/ )
 endif (ROBOCOMP_SUPPORT)
 
 INSTALL(PROGRAMS python/parseAGGL.py DESTINATION ${INST_SHARE_PATH})

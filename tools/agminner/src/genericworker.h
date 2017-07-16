@@ -27,9 +27,7 @@
 #include <ui_mainUI.h>
 
 #include <CommonBehavior.h>
-#include <Planning.h>
-#include <AGMExecutive.h>
-#include <AGMWorldModel.h>
+#include <AGM2.h>
 
 
 
@@ -39,11 +37,6 @@
 typedef map <string,::IceProxy::Ice::Object*> MapPrx;
 
 using namespace std;
-
-using namespace RoboCompPlanning;
-using namespace RoboCompAGMExecutive;
-using namespace RoboCompAGMWorldModel;
-
 
 
 

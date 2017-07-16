@@ -80,7 +80,7 @@ private:
 
 	QMutex modelMutex, planMutex;
 	AGMModel::SPtr worldModel;
-	RoboCompAGMWorldModel::World worldModelICE;
+	RoboCompAGM2::World worldModelICE;
 	AGMModelDrawer *modelDrawer;
 	RCDraw *rcdraw1, *rcdraw2;
 

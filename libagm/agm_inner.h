@@ -35,7 +35,7 @@
 #include <string>
 
 
-#include <AGMExecutive.h>
+#include <AGM2.h>
 
 #ifndef Q_MOC_RUN
 	#include <agm.h>
@@ -89,11 +89,11 @@ public:
 
 	//Actualiza cada simbolo de agm que es de innermodel con la información de innermodel
 	//todos los nodos de innermodel tiene que tene su correspondiente en AGM
-	static void updateAgmWithInnerModelAndPublish( AGMModel::SPtr &worldModel, InnerModel* im, AGMExecutivePrx &agmexecitive_proxy);
+	static void updateAgmWithInnerModelAndPublish( AGMModel::SPtr &worldModel, InnerModel* im, AGMDSRServicePrx &agmexecitive_proxy);
 
 	//update innermodel node from edges
 	static void updateImNodeFromEdge( AGMModel::SPtr &worldModel, AGMModelEdge edge, InnerModel *innerModel);
-	static void updateImNodeFromEdge( AGMModel::SPtr &worldModel, const RoboCompAGMWorldModel::Edge& edge, InnerModel *innerModel);
+	static void updateImNodeFromEdge( AGMModel::SPtr &worldModel, const RoboCompAGM2::Edge& edge, InnerModel *innerModel);
 
 	//DEPRECATED
 	//Insert innermodel in AGM graph matching nodes from innerModel to their correspondent symbols.

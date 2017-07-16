@@ -15,9 +15,7 @@
 #include <agm_modelException.h>
 
 #if ROBOCOMP_SUPPORT == 1
-#include <AGMExecutive.h>
-#include <AGMWorldModel.h>
-#include <AGMCommonBehavior.h>
+#include <AGM2.h>
 #endif
 
 #include <agm_modelSymbols.h>
@@ -204,28 +202,27 @@ public:
 	/// Returns a reference to the symbol vector. Use with care.
 	std::vector<AGMModelSymbol::SPtr> getSymbols() const;
 
+#warning "These methods should be implemented!"
 #if ROBOCOMP_SUPPORT == 1
-	/// Returns a map of smart pointers to a list of symbools
-	template <typename T>
-	std::map<std::string, AGMModelSymbol::SPtr>getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params, T t)
-	{
-		std::map<std::string, AGMModelSymbol::SPtr> ret;
-		ret[t] = getSymbolByIdentifier(str2int(params[t].value));
-		return ret;
-	}
-	template<typename T, typename... Args>
-	std::map<std::string, AGMModelSymbol::SPtr>getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params, T t, Args... args)
-	{
-		std::map<std::string, AGMModelSymbol::SPtr> ret, recurs;
-		ret[t] = getSymbolByIdentifier(str2int(params[t].value));
-		recurs = getSymbolsMap(params, args...);
-		ret.insert(recurs.begin(), recurs.end());
-		return ret;
-	}
-
-	std::map<std::string, AGMModelSymbol::SPtr>getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params);
-
-// 	worldModel->getSymbolsMap(params, "person", "objectr", "conth");
+// 	/// Returns a map of smart pointers to a list of symbools
+// 	template <typename T>
+// 	std::map<std::string, AGMModelSymbol::SPtr>getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params, T t)
+// 	{
+// 		std::map<std::string, AGMModelSymbol::SPtr> ret;
+// 		ret[t] = getSymbolByIdentifier(str2int(params[t].value));
+// 		return ret;
+// 	}
+// 	template<typename T, typename... Args>
+// 	std::map<std::string, AGMModelSymbol::SPtr>getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params, T t, Args... args)
+// 	{
+// 		std::map<std::string, AGMModelSymbol::SPtr> ret, recurs;
+// 		ret[t] = getSymbolByIdentifier(str2int(params[t].value));
+// 		recurs = getSymbolsMap(params, args...);
+// 		ret.insert(recurs.begin(), recurs.end());
+// 		return ret;
+// 	}
+// 
+// 	std::map<std::string, AGMModelSymbol::SPtr>getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params);
 #endif
 
 	/// Returns a reference to the edge vector. Use with care. <strong>DEPRECATED</STRONG>

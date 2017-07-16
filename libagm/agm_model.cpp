@@ -1199,22 +1199,22 @@ AGMModelSymbol::SPtr AGMModel::iterator::operator->()
 
 
 #if ROBOCOMP_SUPPORT == 1
-
-std::map<std::string, AGMModelSymbol::SPtr> AGMModel::getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params)
-{
-	std::map<std::string, AGMModelSymbol::SPtr> ret;
-	for (auto v : params)
-	{
-		if(v.first == "modelversion")
-			continue;
-		int r = str2int(params[v.first].value);
-		if (r>0)
-		{
-			ret[v.first] = getSymbolByIdentifier(r);
-		}
-	}
-	return ret;
-}
+#warning "The method here should be implemented"
+// std::map<std::string, AGMModelSymbol::SPtr> AGMModel::getSymbolsMap(::RoboCompAGMCommonBehavior::ParameterMap params)
+// {
+// 	std::map<std::string, AGMModelSymbol::SPtr> ret;
+// 	for (auto v : params)
+// 	{
+// 		if(v.first == "modelversion")
+// 			continue;
+// 		int r = str2int(params[v.first].value);
+// 		if (r>0)
+// 		{
+// 			ret[v.first] = getSymbolByIdentifier(r);
+// 		}
+// 	}
+// 	return ret;
+// }
 
 #endif
 

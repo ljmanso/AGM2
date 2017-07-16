@@ -79,9 +79,7 @@
 #include "commonbehaviorI.h"
 
 
-#include <AGMWorldModel.h>
-#include <Planning.h>
-#include <AGMExecutive.h>
+#include <AGM2.h>
 
 
 // User includes here
@@ -90,9 +88,7 @@
 using namespace std;
 using namespace RoboCompCommonBehavior;
 
-using namespace RoboCompAGMWorldModel;
-using namespace RoboCompPlanning;
-using namespace RoboCompAGMExecutive;
+using namespace RoboCompAGM2;
 
 
 

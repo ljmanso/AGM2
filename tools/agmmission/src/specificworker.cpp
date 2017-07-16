@@ -174,19 +174,19 @@ void SpecificWorker::edgesUpdated(const EdgeSequence &modification)
 void SpecificWorker::symbolsUpdated(const NodeSequence &modification)
 {
 	QMutexLocker dd(&modelMutex);
-	for (auto n : ns)
+	for (auto n : modification)
 		AGMModelConverter::includeIceModificationInInternalModel(n, worldModel);
 }
 
 
-void SpecificWorker::update(const RoboCompAGMWorldModel::World &a,  const string &target_, const RoboCompPlanning::Plan &pl)
-{
-	printf("SpecificWorker::update plan and target\n");
-	QMutexLocker dd(&planMutex);
-	plan = pl;
-	target = target_;
-	refreshPlan = true;
-}
+// void SpecificWorker::update(const RoboCompAGMWorldModel::World &a,  const string &target_, const RoboCompPlanning::Plan &pl)
+// {
+// 	printf("SpecificWorker::update plan and target\n");
+// 	QMutexLocker dd(&planMutex);
+// 	plan = pl;
+// 	target = target_;
+// 	refreshPlan = true;
+// }
 
 void SpecificWorker::fillItemList()
 {
@@ -248,7 +248,8 @@ void SpecificWorker::broadcastModelButtonClicked()
 	printf("broadcast model button\n");
 	try
 	{
-		agmdsr_proxy->broadcastModel();
+		bool ignored;
+		agmdsrservice_proxy->broadcastModel(false, ignored);
 	}
 	catch(const Ice::Exception &e)
 	{

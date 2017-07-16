@@ -9,7 +9,7 @@
 #include <agm_modelSymbols.h>
 
 #if ROBOCOMP_SUPPORT == 1
-#include <AGMWorldModel.h>
+#include <AGM2.h>
 #endif
 
 /*!
@@ -28,9 +28,9 @@ public:
 	static void printWorld(const AGMModel *w);
 #if ROBOCOMP_SUPPORT == 1
 	/// Prints a model given a RoboComp <em>RoboCompAGMWorldModel::World</em> model data type.
-	static void printWorld(const RoboCompAGMWorldModel::World &w);
+	static void printWorld(const RoboCompAGM2::World &w);
 	/// Prints a model given a RoboComp <em>RoboCompAGMWorldModel::World</em> model data type, to a file.
-	static void printWorld(FILE *fd, const RoboCompAGMWorldModel::World &w);
+	static void printWorld(FILE *fd, const RoboCompAGM2::World &w);
 #endif
 };
 
