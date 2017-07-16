@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2016 by YOUR NAME HERE
+ *    Copyright (C) 2017 by YOUR NAME HERE
  *
  *    This file is part of RoboComp
  *
@@ -59,6 +59,8 @@
  * ...
  *
  */
+#include <signal.h>
+
 // QT includes
 #include <QtCore>
 #include <QtGui>
@@ -69,6 +71,7 @@
 #include <Ice/Application.h>
 
 #include <rapplication/rapplication.h>
+#include <sigwatch/sigwatch.h>
 #include <qlog/qlog.h>
 
 #include "config.h"
@@ -78,13 +81,9 @@
 #include "specificmonitor.h"
 #include "commonbehaviorI.h"
 
-#include <agmcommonbehaviorI.h>
-#include <agmexecutivetopicI.h>
-#include <agmexecutivevisualizationtopicI.h>
+#include <agmdsrtopicI.h>
 
-#include <AGMExecutive.h>
-#include <AGMCommonBehavior.h>
-#include <AGMWorldModel.h>
+#include <AGM2.h>
 
 
 // User includes here
@@ -92,12 +91,6 @@
 // Namespaces
 using namespace std;
 using namespace RoboCompCommonBehavior;
-
-using namespace RoboCompAGMExecutive;
-using namespace RoboCompAGMCommonBehavior;
-using namespace RoboCompAGMWorldModel;
-
-
 
 class agmmission : public RoboComp::Application
 {
@@ -119,36 +112,6 @@ void ::agmmission::initialize()
 	// configGetInt( PROPERTY_NAME_2, property1_holder, PROPERTY_2_DEFAULT_VALUE );
 }
 
-int32_t strToNumber(const std::string &s)
-{
-	if (s.size()<=0)
-	{
-		throw 1;
-	}
-
-	int32_t ret;
-	std::string str = s;
-	//replace(str.begin(), str.end(), ',', '.');
-	std::istringstream istr(str);
-	istr.imbue(std::locale("C"));
-	istr >> ret;
-	return ret;
-}
-
-vector<std::string> commaSplit(const std::string &s)
-{
-	stringstream ss(s);
-	vector<string> result;
-
-	while (ss.good())
-	{
-		string substr;
-		getline( ss, substr, ',' );
-		result.push_back( substr );
-	}
-	return result;
-}
-
 int ::agmmission::run(int argc, char* argv[])
 {
 #ifdef USE_QTGUI
@@ -156,82 +119,57 @@ int ::agmmission::run(int argc, char* argv[])
 #else
 	QCoreApplication a(argc, argv);  // NON-GUI application
 #endif
+
+
+	sigset_t sigs;
+	sigemptyset(&sigs);
+	sigaddset(&sigs, SIGHUP);
+	sigaddset(&sigs, SIGINT);
+	sigaddset(&sigs, SIGTERM);
+	sigprocmask(SIG_UNBLOCK, &sigs, 0);
+
+	UnixSignalWatcher sigwatch;
+	sigwatch.watchForSignal(SIGINT);
+	sigwatch.watchForSignal(SIGTERM);
+	QObject::connect(&sigwatch, SIGNAL(unixSignal(int)), &a, SLOT(quit()));
+
 	int status=EXIT_SUCCESS;
 
-	AGMExecutivePrx agmexecutive_proxy;
+	AGMDSRServicePrx agmdsrservice_proxy;
 
 	string proxy, tmp;
 	initialize();
 
 
-
-	printf("agmmission::run()\n");
-	int32_t goals;
-	vector<std::pair<std::string, std::string> > missions;
 	try
 	{
-		goals = strToNumber(getProxyString("Goals"));
-		printf("Goals: %d\n", goals);
-		for (int32_t i=0; i<goals; i++)
+		if (not GenericMonitor::configGetString(communicator(), prefix, "AGMDSRServiceProxy", proxy, ""))
 		{
-			std::ostringstream ostr;
-			ostr.imbue(std::locale("C"));
-			ostr << "Goal";
-			ostr << i + 1;
-			std::string goalDescriptor = getProxyString(ostr.str());
-			vector<std::string> result = commaSplit(goalDescriptor);
-			missions.push_back(std::pair<std::string, std::string>(result[0], result[1]));
-			printf("%s: <%s> <%s>\n", ostr.str().c_str(), result[0].c_str(), result[1].c_str());
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy AGMDSRServiceProxy\n";
 		}
-	}
-	catch(...)
-	{
-		fprintf(stderr, "Can't read 'Goals' configuration variable (needed to set the goals of the mission controller.\n");
-		exit(42);
-	}
-
-	std::string stopMission;
-	try
-	{
-		stopMission = getProxyString("GoalStop");
-	}
-	catch(...)
-	{
-		fprintf(stderr, "Can't read 'GoalStop' configuration variable (needed to set the goals of the mission controller.\n");
-		exit(42);
-	}
-
-
-	try
-	{
-		if (not GenericMonitor::configGetString(communicator(), prefix, "AGMExecutiveProxy", proxy, ""))
-		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy AGMExecutiveProxy\n";
-		}
-		agmexecutive_proxy = AGMExecutivePrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
+		agmdsrservice_proxy = AGMDSRServicePrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
 	}
 	catch(const Ice::Exception& ex)
 	{
 		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
 		return EXIT_FAILURE;
 	}
-	rInfo("AGMExecutiveProxy initialized Ok!");
-	mprx["AGMExecutiveProxy"] = (::IceProxy::Ice::Object*)(&agmexecutive_proxy);//Remote server proxy creation example
+	rInfo("AGMDSRServiceProxy initialized Ok!");
+	mprx["AGMDSRServiceProxy"] = (::IceProxy::Ice::Object*)(&agmdsrservice_proxy);//Remote server proxy creation example
 
-	IceStorm::TopicManagerPrx topicManager = IceStorm::TopicManagerPrx::checkedCast(communicator()->propertyToProxy("TopicManager.Proxy"));
+	IceStorm::TopicManagerPrx topicManager;
+	try
+	{
+		topicManager = IceStorm::TopicManagerPrx::checkedCast(communicator()->propertyToProxy("TopicManager.Proxy"));
+	}
+	catch (const Ice::Exception &ex)
+	{
+		cout << "[" << PROGRAM_NAME << "]: Exception: STORM not running: " << ex << endl;
+		return EXIT_FAILURE;
+	}
 
 
 	SpecificWorker *worker = new SpecificWorker(mprx);
-	
-	
-	for (uint32_t i=0; i<missions.size(); i++)
-	{
-		((SpecificWorker*)worker)->addMission(missions[i].first, missions[i].second);
-	}
-	printf("Stop mission: %s\n", stopMission.c_str());
-	((SpecificWorker*)worker)->setStopMission(stopMission);
-	
-	
 	//Monitor thread
 	SpecificMonitor *monitor = new SpecificMonitor(worker,communicator());
 	QObject::connect(monitor, SIGNAL(kill()), &a, SLOT(quit()));
@@ -240,12 +178,12 @@ int ::agmmission::run(int argc, char* argv[])
 
 	if ( !monitor->isRunning() )
 		return status;
-	
+
 	while (!monitor->ready)
 	{
 		usleep(10000);
 	}
-	
+
 	try
 	{
 		// Server adapter creation and publication
@@ -261,38 +199,26 @@ int ::agmmission::run(int argc, char* argv[])
 
 
 
-		// Server adapter creation and publication
-		if (not GenericMonitor::configGetString(communicator(), prefix, "AGMCommonBehavior.Endpoints", tmp, ""))
-		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy AGMCommonBehavior";
-		}
-		Ice::ObjectAdapterPtr adapterAGMCommonBehavior = communicator()->createObjectAdapterWithEndpoints("AGMCommonBehavior", tmp);
-		AGMCommonBehaviorI *agmcommonbehavior = new AGMCommonBehaviorI(worker);
-		adapterAGMCommonBehavior->add(agmcommonbehavior, communicator()->stringToIdentity("agmcommonbehavior"));
-		adapterAGMCommonBehavior->activate();
-		cout << "[" << PROGRAM_NAME << "]: AGMCommonBehavior adapter created in port " << tmp << endl;
-
-
 
 
 
 		// Server adapter creation and publication
-		if (not GenericMonitor::configGetString(communicator(), prefix, "AGMExecutiveVisualizationTopicTopic.Endpoints", tmp, ""))
+		if (not GenericMonitor::configGetString(communicator(), prefix, "AGMDSRTopicTopic.Endpoints", tmp, ""))
 		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy AGMExecutiveVisualizationTopicProxy";
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy AGMDSRTopicProxy";
 		}
-		Ice::ObjectAdapterPtr AGMExecutiveVisualizationTopic_adapter = communicator()->createObjectAdapterWithEndpoints("agmexecutivevisualizationtopic", tmp);
-		AGMExecutiveVisualizationTopicPtr agmexecutivevisualizationtopicI_ = new AGMExecutiveVisualizationTopicI(worker);
-		Ice::ObjectPrx agmexecutivevisualizationtopic = AGMExecutiveVisualizationTopic_adapter->addWithUUID(agmexecutivevisualizationtopicI_)->ice_oneway();
-		IceStorm::TopicPrx agmexecutivevisualizationtopic_topic;
-		if(!agmexecutivevisualizationtopic_topic){
+		Ice::ObjectAdapterPtr AGMDSRTopic_adapter = communicator()->createObjectAdapterWithEndpoints("agmdsrtopic", tmp);
+		AGMDSRTopicPtr agmdsrtopicI_ = new AGMDSRTopicI(worker);
+		Ice::ObjectPrx agmdsrtopic = AGMDSRTopic_adapter->addWithUUID(agmdsrtopicI_)->ice_oneway();
+		IceStorm::TopicPrx agmdsrtopic_topic;
+		if(!agmdsrtopic_topic){
 		try {
-			agmexecutivevisualizationtopic_topic = topicManager->create("AGMExecutiveVisualizationTopic");
+			agmdsrtopic_topic = topicManager->create("AGMDSRTopic");
 		}
 		catch (const IceStorm::TopicExists&) {
 		//Another client created the topic
 		try{
-			agmexecutivevisualizationtopic_topic = topicManager->retrieve("AGMExecutiveVisualizationTopic");
+			agmdsrtopic_topic = topicManager->retrieve("AGMDSRTopic");
 		}
 		catch(const IceStorm::NoSuchTopic&)
 		{
@@ -300,37 +226,9 @@ int ::agmmission::run(int argc, char* argv[])
 			}
 		}
 		IceStorm::QoS qos;
-		agmexecutivevisualizationtopic_topic->subscribeAndGetPublisher(qos, agmexecutivevisualizationtopic);
+		agmdsrtopic_topic->subscribeAndGetPublisher(qos, agmdsrtopic);
 		}
-		AGMExecutiveVisualizationTopic_adapter->activate();
-
-		// Server adapter creation and publication
-		if (not GenericMonitor::configGetString(communicator(), prefix, "AGMExecutiveTopicTopic.Endpoints", tmp, ""))
-		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy AGMExecutiveTopicProxy";
-		}
-		Ice::ObjectAdapterPtr AGMExecutiveTopic_adapter = communicator()->createObjectAdapterWithEndpoints("agmexecutivetopic", tmp);
-		AGMExecutiveTopicPtr agmexecutivetopicI_ = new AGMExecutiveTopicI(worker);
-		Ice::ObjectPrx agmexecutivetopic = AGMExecutiveTopic_adapter->addWithUUID(agmexecutivetopicI_)->ice_oneway();
-		IceStorm::TopicPrx agmexecutivetopic_topic;
-		if(!agmexecutivetopic_topic){
-		try {
-			agmexecutivetopic_topic = topicManager->create("AGMExecutiveTopic");
-		}
-		catch (const IceStorm::TopicExists&) {
-		//Another client created the topic
-		try{
-			agmexecutivetopic_topic = topicManager->retrieve("AGMExecutiveTopic");
-		}
-		catch(const IceStorm::NoSuchTopic&)
-		{
-			//Error. Topic does not exist
-			}
-		}
-		IceStorm::QoS qos;
-		agmexecutivetopic_topic->subscribeAndGetPublisher(qos, agmexecutivetopic);
-		}
-		AGMExecutiveTopic_adapter->activate();
+		AGMDSRTopic_adapter->activate();
 
 		// Server adapter creation and publication
 		cout << SERVER_FULL_NAME " started" << endl;
@@ -343,6 +241,10 @@ int ::agmmission::run(int argc, char* argv[])
 #endif
 		// Run QT Application Event Loop
 		a.exec();
+
+		std::cout << "Unsubscribing topic: agmdsrtopic " <<std::endl;
+		agmdsrtopic_topic->unsubscribe( agmdsrtopic );
+
 		status = EXIT_SUCCESS;
 	}
 	catch(const Ice::Exception& ex)
@@ -399,4 +301,3 @@ int main(int argc, char* argv[])
 
 	return app.main(argc, argv, configFile.c_str());
 }
-

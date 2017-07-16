@@ -3,13 +3,14 @@
 
 #include <agm_modelConverter.h>
 #include <agm_modelEdge.h>
+#include <agm_misc_functions.h>
 #include <agm_modelPrinter.h>
 
 #include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/tree.h>
 
 #if ROBOCOMP_SUPPORT == 1
-void AGMModelConverter::fromInternalToIce(const AGMModel::SPtr &src, RoboCompAGMWorldModel::World &dst)
+void AGMModelConverter::fromInternalToIce(const AGMModel::SPtr &src, RoboCompAGM2::World &dst)
 {
 	// remove dangling edges
 	src->removeDanglingEdges();
@@ -19,7 +20,7 @@ void AGMModelConverter::fromInternalToIce(const AGMModel::SPtr &src, RoboCompAGM
 	dst.nodes.clear();
 	for (uint32_t i=0; i<src->symbols.size(); ++i)
 	{
-		RoboCompAGMWorldModel::Node node;
+		RoboCompAGM2::Node node;
 		node.nodeType = src->symbols[i]->symbolType;
 		node.nodeIdentifier = src->symbols[i]->identifier;
 		if (node.nodeIdentifier == -1)
@@ -28,14 +29,15 @@ void AGMModelConverter::fromInternalToIce(const AGMModel::SPtr &src, RoboCompAGM
 			AGMModelPrinter::printWorld(src);
 			exit(-1);
 		}
-		node.attributes = src->symbols[i]->attributes;
+		
+ 		node.attributes = AGMMisc::stringMap2stringVector(src->symbols[i]->attributes);
 		dst.nodes.push_back(node);
 	}
 	// copy edges
 	dst.edges.clear();
 	for (uint32_t i=0; i<src->edges.size(); ++i)
 	{
-		RoboCompAGMWorldModel::Edge edge;
+		RoboCompAGM2::Edge edge;
 		edge.edgeType = src->edges[i].linking;
 		edge.a = src->edges[i].symbolPair.first;
 		if (edge.a == -1)
@@ -51,19 +53,19 @@ void AGMModelConverter::fromInternalToIce(const AGMModel::SPtr &src, RoboCompAGM
 			AGMModelPrinter::printWorld(src);
 			exit(-1);
 		}
-		edge.attributes = src->edges[i]->attributes;
+		edge.attributes = AGMMisc::stringMap2stringVector(src->edges[i]->attributes);
 		dst.edges.push_back(edge);
 	}
 }
 
 
-void AGMModelConverter::fromIceToInternal(const RoboCompAGMWorldModel::World &src, AGMModel::SPtr &dst)
+void AGMModelConverter::fromIceToInternal(const RoboCompAGM2::World &src, AGMModel::SPtr &dst)
 {
 	// nodes
 	dst->symbols.clear();
 	for (uint32_t i=0; i<src.nodes.size(); ++i)
 	{
-		dst->newSymbol(src.nodes[i].nodeIdentifier, src.nodes[i].nodeType, src.nodes[i].attributes);
+		dst->newSymbol(src.nodes[i].nodeIdentifier, src.nodes[i].nodeType, AGMMisc::stringVector2stringMap(src.nodes[i].attributes));
 		if (src.nodes[i].nodeIdentifier == -1)
 		{
 			fprintf(stderr, "Can't transform models containing nodes with invalid identifiers (type: %s).\n", src.nodes[i].nodeType.c_str());
@@ -74,7 +76,7 @@ void AGMModelConverter::fromIceToInternal(const RoboCompAGMWorldModel::World &sr
 	dst->edges.clear();
 	for (uint32_t i=0; i<src.edges.size(); ++i)
 	{
-		AGMModelEdge edge(src.edges[i].a, src.edges[i].b, src.edges[i].edgeType, src.edges[i].attributes);
+		AGMModelEdge edge(src.edges[i].a, src.edges[i].b, src.edges[i].edgeType, AGMMisc::stringVector2stringMap(src.edges[i].attributes));
 		dst->edges.push_back(edge);
 		if (src.edges[i].a == -1 or src.edges[i].b == -1)
 		{
@@ -88,14 +90,14 @@ void AGMModelConverter::fromIceToInternal(const RoboCompAGMWorldModel::World &sr
 	dst->resetLastId();
 }
 
-void AGMModelConverter::fromInternalToIce(const AGMModelSymbol::SPtr &node, RoboCompAGMWorldModel::Node &dst)
+void AGMModelConverter::fromInternalToIce(const AGMModelSymbol::SPtr &node, RoboCompAGM2::Node &dst)
 {
 	dst.nodeType = node->symbolType;
 	dst.nodeIdentifier = node->identifier;
-	dst.attributes = node->attributes;
+	dst.attributes = AGMMisc::stringMap2stringVector(node->attributes);
 }
 
-// void AGMModelConverter::fromInternalToIce(const AGMModelEdge::SPtr &edge, RoboCompAGMWorldModel::Edge &dst)
+// void AGMModelConverter::fromInternalToIce(const AGMModelEdge::SPtr &edge, RoboCompAGM2::Edge &dst)
 // {
 // 	dst.edgeType = edge->linking;
 // 	dst.a = edge->symbolPair.first;
@@ -103,39 +105,39 @@ void AGMModelConverter::fromInternalToIce(const AGMModelSymbol::SPtr &node, Robo
 // 	dst.attributes = edge->attributes;
 // }
 
-void AGMModelConverter::fromInternalToIce(const AGMModelSymbol *node, RoboCompAGMWorldModel::Node &dst)
+void AGMModelConverter::fromInternalToIce(const AGMModelSymbol *node, RoboCompAGM2::Node &dst)
 {
 	dst.nodeType = node->symbolType;
 	dst.nodeIdentifier = node->identifier;
-	dst.attributes = node->attributes;
+	dst.attributes = AGMMisc::stringMap2stringVector(node->attributes);
 }
 
-void AGMModelConverter::fromInternalToIce(const AGMModelEdge *edge, RoboCompAGMWorldModel::Edge &dst)
+void AGMModelConverter::fromInternalToIce(const AGMModelEdge *edge, RoboCompAGM2::Edge &dst)
 {
 	dst.edgeType = edge->linking;
 	dst.a = edge->symbolPair.first;
 	dst.b =edge->symbolPair.second;
-	dst.attributes = edge->attributes;
+	dst.attributes = AGMMisc::stringMap2stringVector(edge->attributes);
 }
 
-void AGMModelConverter::fromIceToInternal(const RoboCompAGMWorldModel::Node &node, AGMModelSymbol::SPtr &dst)
+void AGMModelConverter::fromIceToInternal(const RoboCompAGM2::Node &node, AGMModelSymbol::SPtr &dst)
 {
 	dst->symbolType = node.nodeType;
-	dst->attributes = node.attributes;
+	dst->attributes = AGMMisc::stringVector2stringMap(node.attributes);
 	dst->identifier = node.nodeIdentifier;
 }
 
-void AGMModelConverter::fromIceToInternal(const RoboCompAGMWorldModel::Edge &edge, AGMModelEdge &dst)
+void AGMModelConverter::fromIceToInternal(const RoboCompAGM2::Edge &edge, AGMModelEdge &dst)
 {
 	dst->linking = edge.edgeType;
 	dst->symbolPair.first = edge.a;
 	dst->symbolPair.second =edge.b;
-	dst->attributes = edge.attributes;
+	dst->attributes = AGMMisc::stringVector2stringMap(edge.attributes);
 	
 }
 
 
-bool AGMModelConverter::includeIceModificationInInternalModel(const std::vector<RoboCompAGMWorldModel::Node> &nodes, AGMModel::SPtr &world)
+bool AGMModelConverter::includeIceModificationInInternalModel(const std::vector<RoboCompAGM2::Node> &nodes, AGMModel::SPtr &world)
 {
 	bool ret = true;
 	for (auto n : nodes)
@@ -146,16 +148,16 @@ bool AGMModelConverter::includeIceModificationInInternalModel(const std::vector<
 	return ret;
 }
 
-bool AGMModelConverter::includeIceModificationInInternalModel(const RoboCompAGMWorldModel::Node &node, AGMModel::SPtr &world)
+bool AGMModelConverter::includeIceModificationInInternalModel(const RoboCompAGM2::Node &node, AGMModel::SPtr &world)
 {
 	for (uint32_t i=0; i<world->symbols.size(); ++i)
 	{
 		if (node.nodeType == world->symbols[i]->symbolType and node.nodeIdentifier == world->symbols[i]->identifier)
 		{
-			std::map<std::string, std::string>::const_iterator iter;
-			for (iter = node.attributes.begin(); iter!=node.attributes.end(); iter++)
+			RoboCompAGM2::StringDictionary::const_iterator iter;
+			for (auto &v: node.attributes)
 			{
-				world->symbols[i]->attributes[iter->first] = iter->second;
+				world->symbols[i]->attributes[v.first] = v.second;
 			}
 			return true;
 		}
@@ -163,7 +165,7 @@ bool AGMModelConverter::includeIceModificationInInternalModel(const RoboCompAGMW
 	return false;
 }
 
-bool AGMModelConverter::includeIceModificationInInternalModel(const std::vector<RoboCompAGMWorldModel::Edge> &edges, AGMModel::SPtr &world)
+bool AGMModelConverter::includeIceModificationInInternalModel(const std::vector<RoboCompAGM2::Edge> &edges, AGMModel::SPtr &world)
 {
 	bool ret = true;
 	for (auto e : edges)
@@ -174,16 +176,15 @@ bool AGMModelConverter::includeIceModificationInInternalModel(const std::vector<
 	return ret;
 }
 
-bool AGMModelConverter::includeIceModificationInInternalModel(const RoboCompAGMWorldModel::Edge &edge, AGMModel::SPtr &world)
+bool AGMModelConverter::includeIceModificationInInternalModel(const RoboCompAGM2::Edge &edge, AGMModel::SPtr &world)
 {
 	for (uint32_t i=0; i<world->edges.size(); ++i)
 	{
 		if (edge.edgeType == world->edges[i].linking  and edge.a == world->edges[i].symbolPair.first and edge.b == world->edges[i].symbolPair.second)
 		{
-			std::map<std::string, std::string>::const_iterator iter;
-			for (iter = edge.attributes.begin(); iter!=edge.attributes.end(); iter++)
+			for (auto &v : edge.attributes)
 			{
-				world->edges[i].attributes[iter->first] = iter->second;
+				world->edges[i].attributes[v.first] = v.second;
 			}
 			return true;
 		}

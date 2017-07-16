@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2016 by YOUR NAME HERE
+ *    Copyright (C) 2017 by YOUR NAME HERE
  *
  *    This file is part of RoboComp
  *
@@ -16,26 +16,30 @@
  *    You should have received a copy of the GNU General Public License
  *    along with RoboComp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "agmexecutivevisualizationtopicI.h"
+#include "agmdsrtopicI.h"
 
-AGMExecutiveVisualizationTopicI::AGMExecutiveVisualizationTopicI(GenericWorker *_worker, QObject *parent) : QObject(parent)
+AGMDSRTopicI::AGMDSRTopicI(GenericWorker *_worker)
 {
 	worker = _worker;
-	mutex = worker->mutex;       // Shared worker mutex
 }
 
 
-AGMExecutiveVisualizationTopicI::~AGMExecutiveVisualizationTopicI()
+AGMDSRTopicI::~AGMDSRTopicI()
 {
 }
 
-void AGMExecutiveVisualizationTopicI::update(const RoboCompAGMWorldModel::World  &world, const string &target, const RoboCompPlanning::Plan  &plan, const Ice::Current&)
+void AGMDSRTopicI::structuralChange(const World  &w, const Ice::Current&)
 {
-	worker->update(world, target, plan);
+	worker->structuralChange(w);
 }
 
+void AGMDSRTopicI::edgesUpdated(const EdgeSequence  &modification, const Ice::Current&)
+{
+	worker->edgesUpdated(modification);
+}
 
-
-
-
+void AGMDSRTopicI::symbolsUpdated(const NodeSequence  &modification, const Ice::Current&)
+{
+	worker->symbolsUpdated(modification);
+}
 

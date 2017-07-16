@@ -98,10 +98,14 @@ if (ROBOCOMP_SUPPORT)
 	INCLUDE( $ENV{ROBOCOMP}/cmake/robocomp.cmake )
 	ROBOCOMP_INITIALIZE( $ENV{ROBOCOMP}/ )
 	SET(ICE_LIBS -lIce)
-	ROBOCOMP_WRAP_ICE( AGMWorldModel AGMExecutive Planning AGMCommonBehavior )
+	message(status "$ENV{SLICE_PATH}")
+	ROBOCOMP_WRAP_ICE( AGM2 )
 	ADD_DEFINITIONS(-DROBOCOMP_SUPPORT=1)
 	SUBDIRS (${CMAKE_SOURCE_DIR}/tools/agmmission tools/agminner tools/agmagentsim)
 endif (ROBOCOMP_SUPPORT)
+
+
+
 
 # LibXML
 FIND_PACKAGE(LibXml2 REQUIRED)
@@ -160,8 +164,8 @@ WRAP_PYTHON_QRC( resource )
 #  Library building  #
 ######################
 if (ROBOCOMP_SUPPORT)
-   add_library(agmdummy SHARED AGMWorldModel.cpp AGMExecutive.cpp AGMCommonBehavior.cpp Planning.cpp )
-   set(ROBOCOMP_ADDITIONAL_SRC AGMExecutive.cpp Planning.cpp )
+   add_library(agmdummy SHARED AGM2.cpp )
+   set(ROBOCOMP_ADDITIONAL_SRC AGM2.cpp )
 endif (ROBOCOMP_SUPPORT)
 
 add_library(agm SHARED ${AGM_CODE} ${XMLVIEWER3D_MOCS} )

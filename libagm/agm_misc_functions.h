@@ -5,10 +5,8 @@
 #include <agm_modelException.h>
 
 #if ROBOCOMP_SUPPORT == 1
-#include <AGMExecutive.h>
-#include <AGMWorldModel.h>
-#include <AGMCommonBehavior.h>
-using namespace RoboCompAGMExecutive;
+#include <AGM2.h>
+using namespace RoboCompAGM2;
 #endif
 
 /*! Converts an STD string to float. */
@@ -36,17 +34,19 @@ std::string int2str(const int32_t &i);
 class AGMMisc
 {
 public:
+	static std::map<std::string, std::string> stringVector2stringMap(RoboCompAGM2::StringDictionary input);
+	static RoboCompAGM2::StringDictionary stringMap2stringVector(std::map<std::string, std::string> input);
 #if ROBOCOMP_SUPPORT == 1
 	/*! Proposes a new world model (<em>newModel</em>) using the proxy <em>AGMExecutive</em> provinding <em>sender</em> as additional information that might be interesting for debugging purposes. */
-	static void publishModification(AGMModel::SPtr &newModel, AGMExecutivePrx &agmexecutive, std::string sender="unspecified");
+	static void publishModification(AGMModel::SPtr &newModel, AGMDSRServicePrx &agmdsr, std::string sender="unspecified", std::string log="no log information");
 	/*! Modifies a node (<em>symbol</em>) using the proxy <em>AGMExecutive</em>. */
-	static void publishNodeUpdate(AGMModelSymbol::SPtr &symbol, AGMExecutivePrx &agmexecutive);
+	static void publishNodeUpdate(AGMModelSymbol::SPtr &symbol, AGMDSRServicePrx &agmdsr);
 	/*! Modifies several nodes (<em>symbol</em>) using the proxy <em>AGMExecutive</em>. */
-	static void publishNodesUpdate(std::vector<AGMModelSymbol::SPtr> symbols, AGMExecutivePrx &agmexecutive);
+	static void publishNodesUpdate(std::vector<AGMModelSymbol::SPtr> symbols, AGMDSRServicePrx &agmdsr);
 	/*! Modifies an edge (<em>edge</em>) using the proxy <em>AGMExecutive</em>. */
-	static void publishEdgeUpdate(AGMModelEdge &edge, AGMExecutivePrx &agmexecutive);
+	static void publishEdgeUpdate(AGMModelEdge &edge, AGMDSRServicePrx &agmdsr);
 	/*! Modifies several edges (<em>edge</em>) using the proxy <em>AGMExecutive</em>. */
-	static void publishEdgesUpdate(std::vector<AGMModelEdge> edges, AGMExecutivePrx &agmexecutive);
+	static void publishEdgesUpdate(std::vector<AGMModelEdge> edges, AGMDSRServicePrx &agmdsr);
 #endif
 	static inline float str2float(const std::string &s, bool debug = false);
 	static inline int32_t str2int(const std::string &s);

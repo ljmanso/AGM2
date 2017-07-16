@@ -58,50 +58,71 @@ std::string int2str(const int32_t &i)
 
 #if ROBOCOMP_SUPPORT == 1
 
-void AGMMisc::publishModification(AGMModel::SPtr &newModel, AGMExecutivePrx &agmexecutive, std::string sender)
+void AGMMisc::publishModification(AGMModel::SPtr &newModel, AGMDSRServicePrx &agmdsr, std::string sender, std::string log)
 {
-	newModel->removeDanglingEdges();
-	RoboCompAGMWorldModel::World newModelICE;
-	AGMModelConverter::fromInternalToIce(newModel, newModelICE);
-	agmexecutive->structuralChangeProposal(newModelICE, sender, "");
+	RoboCompAGM2::StructuralChangeStruct structuralChangeStruct;
+	// Prepare .world
+	newModel->removeDanglingEdges();	
+	AGMModelConverter::fromInternalToIce(newModel, structuralChangeStruct.model);
+	// Parepare .changes
+	// Prepare .sender
+	structuralChangeStruct.sender = sender;
+	// Prepare .log
+	structuralChangeStruct.log = log;
+
+	int ret;
+#warning "We should here return the corresponding exception, depending on the value returned"
+	agmdsr->structuralChangeProposal(structuralChangeStruct, ret);
 }
 
-void AGMMisc::publishNodeUpdate(AGMModelSymbol::SPtr &symbol, AGMExecutivePrx &agmexecutive)
+void AGMMisc::publishNodeUpdate(AGMModelSymbol::SPtr &symbol, AGMDSRServicePrx &agmdsr)
 {
-	RoboCompAGMWorldModel::Node iceSymbol;
+	RoboCompAGM2::Node iceSymbol;
 	AGMModelConverter::fromInternalToIce(symbol, iceSymbol);
-	agmexecutive->symbolUpdate(iceSymbol);
+	
+	int ret;
+#warning "We should here return the corresponding exception, depending on the value returned"
+	agmdsr->symbolUpdate(iceSymbol, ret);
 }
 
-void AGMMisc::publishNodesUpdate(std::vector<AGMModelSymbol::SPtr> symbols, AGMExecutivePrx &agmexecutive)
+void AGMMisc::publishNodesUpdate(std::vector<AGMModelSymbol::SPtr> symbols, AGMDSRServicePrx &agmdsr)
 {
-	RoboCompAGMWorldModel::NodeSequence symbol_sequence;
+	RoboCompAGM2::NodeSequence symbol_sequence;
 	for (std::vector<AGMModelSymbol::SPtr>::iterator it=symbols.begin();it != symbols.end(); it++)
 	{
-		RoboCompAGMWorldModel::Node iceSymbol;
+		RoboCompAGM2::Node iceSymbol;
 		AGMModelConverter::fromInternalToIce(*it, iceSymbol);
 		symbol_sequence.push_back(iceSymbol);
 	}
-	agmexecutive->symbolsUpdate(symbol_sequence);
+
+	int ret;
+#warning "We should here return the corresponding exception, depending on the value returned"
+	agmdsr->symbolsUpdate(symbol_sequence, ret);
 }
 
-void AGMMisc::publishEdgeUpdate(AGMModelEdge &edge, AGMExecutivePrx &agmexecutive)
+void AGMMisc::publishEdgeUpdate(AGMModelEdge &edge, AGMDSRServicePrx &agmdsr)
 {
-	RoboCompAGMWorldModel::Edge iceEdge;
+	RoboCompAGM2::Edge iceEdge;
 	AGMModelConverter::fromInternalToIce(&edge, iceEdge);
-	agmexecutive->edgeUpdate(iceEdge);
+
+	int ret;
+#warning "We should here return the corresponding exception, depending on the value returned"
+	agmdsr->edgeUpdate(iceEdge, ret);
 }
 
-void AGMMisc::publishEdgesUpdate(std::vector<AGMModelEdge> edges, AGMExecutivePrx &agmexecutive)
+void AGMMisc::publishEdgesUpdate(std::vector<AGMModelEdge> edges, AGMDSRServicePrx &agmdsr)
 {
-	RoboCompAGMWorldModel::EdgeSequence edge_sequence;
+	RoboCompAGM2::EdgeSequence edge_sequence;
 	for (std::vector<AGMModelEdge>::iterator it=edges.begin();it != edges.end(); it++)
 	{
-		RoboCompAGMWorldModel::Edge iceEdge;
+		RoboCompAGM2::Edge iceEdge;
 		AGMModelConverter::fromInternalToIce(&(*it), iceEdge);
 		edge_sequence.push_back(iceEdge);
 	}
-	agmexecutive->edgesUpdate(edge_sequence);
+
+	int ret;
+#warning "We should here return the corresponding exception, depending on the value returned"
+	agmdsr->edgesUpdate(edge_sequence, ret);
 }
 
 #endif
@@ -134,7 +155,28 @@ std::string AGMMisc::int2str(const int32_t &i)
 	return ::int2str(i);
 }
 
+std::map<std::string, std::string> AGMMisc::stringVector2stringMap(RoboCompAGM2::StringDictionary input)
+{
+	std::map<std::string, std::string> ret;
+	for (auto &e: input)
+	{
+		ret[e.first] = e.second;
+	}
+	return ret;
+}
 
+RoboCompAGM2::StringDictionary AGMMisc::stringMap2stringVector(std::map<std::string, std::string> input)
+{
+	RoboCompAGM2::StringDictionary ret;
+	for (auto &kv: input)
+	{
+		RoboCompAGM2::StringPair p;
+		p.first = kv.first;
+		p.second = kv.second;
+		ret.push_back(p);
+	}
+	return ret;
+}
 
 
 
